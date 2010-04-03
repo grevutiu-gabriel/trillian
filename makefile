@@ -1,13 +1,13 @@
-SRC=src\trillian.c
+SRC=src\trillian.c src\wavfile.c src\endian.c
 
 OBJ=$(SRC:.c=.o) # replaces the .c from SRC with .o
 EXE=trillian.exe
 
 CC=gcc
-CFLAGS=-Wall -O3
+CFLAGS=-Wall -O3 -I.\Include
 RM=-del
 
-%.o: %.c	# combined w/ next line will compile recently changed .c files
+%.o: %.c         # combined w/ next line will compile recently changed .c files
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 .PHONY : all     # .PHONY ignores files named all
