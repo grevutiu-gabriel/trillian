@@ -56,11 +56,15 @@ static void tr_version(void)
 {
 	fprintf(stdout, "Trillian %i.%i.%i\n", TRILLIAN_MAJ_VER, TRILLIAN_MIN_VER, TRILLIAN_INC_VER);
 	fprintf(stdout, "Copyright (C) 2010 Michael Jones\n");
+	fprintf(stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
+	fprintf(stdout, "This is free software: you are free to change and redistribute it.\n");
+	fprintf(stdout, "There is NO WARRANTY, to the extent permitted by law.\n");
 }
 
 static void tr_help(void)
 {
 	tr_version();
+	fprintf(stdout, "\n");
 	fprintf(stdout, "Usage: trillian [options] input.wav response.wav \n");
 	fprintf(stdout, "Options: \n");
 	fprintf(stdout, "  -h, --help             Show this message and exit. \n");
@@ -68,8 +72,8 @@ static void tr_help(void)
 	fprintf(stdout, "  -s, --silent, --quiet  Quiet mode; no output to console (stdout). \n");
 	fprintf(stdout, "  -o, --output           Ouput to given filename. \n");
 	fprintf(stdout, "\n");
-	fprintf(stdout, "Report bugs to    : trillian-discuss@googlegroups.com \n");
-	fprintf(stdout, "Trillian homepage : http://code.google.com/p/trillian \n");
+	fprintf(stdout, "Report bugs to     : trillian-discuss@googlegroups.com \n");
+	fprintf(stdout, "Trillian home page : http://code.google.com/p/trillian \n");
 }
 
 static void tr_parseoptions(int argc, char** argv)
