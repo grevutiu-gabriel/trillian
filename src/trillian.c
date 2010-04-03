@@ -29,7 +29,7 @@
 
 #define TRILLIAN_MAJ_VER 0x00
 #define TRILLIAN_MIN_VER 0x0000
-#define TRILLIAN_INC_VER 0x000002
+#define TRILLIAN_INC_VER 0x000003
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,7 +70,7 @@ static void tr_help(void)
 	fprintf(stdout, "  -h, --help             Show this message and exit. \n");
 	fprintf(stdout, "  -v, --version          Display version number and exit. \n");
 	fprintf(stdout, "  -s, --silent, --quiet  Quiet mode; no output to console (stdout). \n");
-	fprintf(stdout, "  -o, --output           Ouput to given filename. \n");
+	fprintf(stdout, "  -o, --output           Use given filename for output wav file. \n");
 	fprintf(stdout, "\n");
 	fprintf(stdout, "Report bugs to     : trillian-discuss@googlegroups.com \n");
 	fprintf(stdout, "Trillian home page : http://code.google.com/p/trillian \n");
@@ -222,23 +222,67 @@ int main(int argc, char** argv)
 	}
 	
 	/* Prepare a buffer to accept the data from our processing */
-	int minsamples = inputwav.totalsamples < responsewav.totalsamples ? inputwav.totalsamples : responsewav.totalsamples;
-	int maxsamples = inputwav.totalsamples > responsewav.totalsamples ? inputwav.totalsamples : responsewav.totalsamples;
-	float* a = inputbuffer;
-	float* b = responsebuffer;
-	float* outputbuffer = malloc(maxsamples*sizeof(float));
-	float* c = outputbuffer;
-	memset(c, 0, maxsamples*sizeof(float));
+	unsigned int samplesinput    = inputwav.totalsamples;
+	unsigned int samplesresponse = responsewav.totalsamples;
+	unsigned int samplestotal    = samplesinput + samplesresponse + 1;
+	float* outputbuffer = malloc(samplestotal*sizeof(float));
+	
+	float* conv = outputbuffer;
+	unsigned int inoffset;
+	unsigned int reoffset;
+	unsigned int n_hi;
+	unsigned int n_lo;
 	
 	if(!quiet)
 	{
 		fprintf(stdout, "Processing audio\n");
 	}
-	/* Do some processing */
+	
+	/* Do the processing (time domain convolution) */
 	unsigned int i;
-	for(i = minsamples; i > 0; i--)
+	for(i = 0; i < samplestotal; i++)
 	{
-		*c++ = *a++ * *b++;
+		n_lo = i < samplesresponse ? 0 : i - samplesresponse;
+		n_hi = samplesinput < i ? samplesinput : i;
+		
+		inoffset = n_lo;
+		reoffset = i - n_lo;
+		
+		*conv = 0.0f;
+		unsigned int n;
+		for(n = n_lo; n < n_hi; n++)
+		{
+			*conv += *(inputbuffer+inoffset) * *(responsebuffer+reoffset);
+			++inoffset;
+			--reoffset;
+		}
+		conv++;
+	}
+	
+	if(!quiet)
+	{
+		fprintf(stdout, "Normalising audio\n");
+	}
+	
+	/* Normalise the data */
+	conv = outputbuffer;
+	float maxsample = 0.0f;
+	
+	for(i = 0; i < samplestotal; i++)
+	{
+		if(*conv > maxsample)
+		{
+			maxsample = *conv;
+		}
+		++conv;
+	}
+	
+	conv = outputbuffer;
+	float normalise = 1.0f / maxsample;
+	
+	for(i = 0; i < samplestotal; i++)
+	{
+		*conv++ *= normalise;
 	}
 	
 	/* Setup the output file */
@@ -256,18 +300,18 @@ int main(int argc, char** argv)
 	{
 		fprintf(stdout, "\n");
 		fprintf(stdout, "Output file        : %s\n", outfilename);
-		fprintf(stdout, "  Samples          : %u\n", maxsamples);
+		fprintf(stdout, "  Samples          : %u\n", samplestotal);
 		fprintf(stdout, "  Channels         : %i\n", outwav.channels);
 		fprintf(stdout, "  Sample rate      : %u\n", outwav.samplerate);
 		fprintf(stdout, "  Bytes per sample : %u\n", outwav.bytespersample);
-		fprintf(stdout, "  Duration seconds : %.2f\n", (float)(maxsamples / outwav.samplerate));
+		fprintf(stdout, "  Duration seconds : %.2f\n", (float)(samplestotal / outwav.samplerate));
 		
 		fprintf(stdout, "\n");
 		fprintf(stdout, "Writing data out to %s\n", outfilename);
 	}
 	
 	/* Write out data from the processing to file */
-	if(!tr_wavwrite(&outwav, outputbuffer, maxsamples))
+	if(!tr_wavwrite(&outwav, outputbuffer, samplestotal))
 	{
 		fprintf(stderr, "ERROR: Failed during write of %s.  File may be malformed\n", outfilename);
 	}
