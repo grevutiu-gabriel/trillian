@@ -1,0 +1,16 @@
+Trillian.
+Audio convolution utility.
+Trillian homepage : http://code.google.com/p/trillian
+Bugs/help         : trillian-discuss@googlegroups.com
+
+Copyright (C) 2010  Mike Jones
+
+See LICENSE for Trillian license info.
+
+Trillian *should* compile on most platforms, although it has only been
+tested on Windows32 using Mingw32 so far.
+
+Windows32:
+    You will need Mingw32 <http://www.mingw.org/>
+    Using the command propmt cd into the directory the makefile is located in ("cd path/to/code").
+    Execute 'make' in the command prompt ("mingw32-make").
