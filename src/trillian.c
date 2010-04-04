@@ -1,22 +1,22 @@
-/* 
-	Trillian 
-	Audio convolution utility
-	Trillian homepage : http://code.google.com/p/trillian
-	
-	Copyright (C) 2010  Mike Jones
+/*
+    This file is part of Trillian.
+    Audio convolution utility.
+    Trillian homepage : http://code.google.com/p/trillian.
 
-    This program is free software: you can redistribute it and/or modify
+    Copyright (C) 2010  Mike Jones
+
+    Trillian is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
+    Trillian is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with Trillian.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdio.h>
@@ -29,7 +29,7 @@
 
 #define TRILLIAN_MAJ_VER 0x00
 #define TRILLIAN_MIN_VER 0x0000
-#define TRILLIAN_INC_VER 0x000003
+#define TRILLIAN_INC_VER 0x000004
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
 		fprintf(stdout, "  Channels         : %i\n", inputwav.channels);
 		fprintf(stdout, "  Sample rate      : %u\n", inputwav.samplerate);
 		fprintf(stdout, "  Bytes per sample : %u\n", inputwav.bytespersample);
-		fprintf(stdout, "  Duration seconds : %.2f\n", (float)(inputwav.totalsamples / inputwav.samplerate));
+		fprintf(stdout, "  Duration seconds : %.2f\n", ((float)inputwav.totalsamples / (float)inputwav.samplerate / (float)inputwav.channels));
 	}
 	
 	/* Now setup the response file */
@@ -200,9 +200,26 @@ int main(int argc, char** argv)
 		fprintf(stdout, "  Channels         : %i\n", responsewav.channels);
 		fprintf(stdout, "  Sample rate      : %u\n", responsewav.samplerate);
 		fprintf(stdout, "  Bytes per sample : %u\n", responsewav.bytespersample);
-		fprintf(stdout, "  Duration seconds : %.2f\n", (float)(responsewav.totalsamples / responsewav.samplerate));
+		fprintf(stdout, "  Duration seconds : %.2f\n", ((float)responsewav.totalsamples / (float)responsewav.samplerate / (float)responsewav.channels));
 		
 		fprintf(stdout, "\n");
+	}
+	
+	/* Make sure we can handle processing the two files */
+	if(inputwav.channels != responsewav.channels)
+	{
+		fprintf(stderr, "ERROR: Channels do not match. %s has %i channels, %s has %i\n", 
+		   infilename, inputwav.channels, responsefilename, responsewav.channels);
+		return 1;
+	}
+	else if(inputwav.samplerate != responsewav.samplerate)
+	{
+		fprintf(stderr, "ERROR: Sample rates do not match. %s is at %uHz, %s is at %uHz\n", 
+		   infilename, inputwav.samplerate, responsefilename, responsewav.samplerate);
+		return 1;
+	}
+	else if(!quiet)
+	{
 		fprintf(stdout, "Reading %s and %s into memory\n", infilename, responsefilename);
 	}
 	
@@ -235,7 +252,7 @@ int main(int argc, char** argv)
 	
 	if(!quiet)
 	{
-		fprintf(stdout, "Processing audio\n");
+		fprintf(stdout, "Processing audio, please be patient\n");
 	}
 	
 	/* Do the processing (time domain convolution) */
@@ -295,6 +312,9 @@ int main(int argc, char** argv)
 	
 	tr_wavfile outwav;
 	tr_wavopen(outfile, &outwav, 'w');
+	outwav.channels       = inputwav.channels;
+	outwav.samplerate     = inputwav.samplerate;
+	outwav.bytespersample = inputwav.bytespersample;
 	
 	if(!quiet)
 	{
@@ -304,7 +324,7 @@ int main(int argc, char** argv)
 		fprintf(stdout, "  Channels         : %i\n", outwav.channels);
 		fprintf(stdout, "  Sample rate      : %u\n", outwav.samplerate);
 		fprintf(stdout, "  Bytes per sample : %u\n", outwav.bytespersample);
-		fprintf(stdout, "  Duration seconds : %.2f\n", (float)(samplestotal / outwav.samplerate));
+		fprintf(stdout, "  Duration seconds : %.2f\n", ((float)samplestotal / (float)outwav.samplerate / (float)outwav.channels));
 		
 		fprintf(stdout, "\n");
 		fprintf(stdout, "Writing data out to %s\n", outfilename);
