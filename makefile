@@ -4,7 +4,7 @@ OBJ=$(SRC:.c=.o) # replaces the .c from SRC with .o
 EXE=trillian.exe
 
 CC=gcc
-CFLAGS=-Wall -O3 -I.\Include
+CFLAGS=-Wall -O3 -I.\include -pedantic -std=gnu99
 RM=-del
 
 %.o: %.c         # combined w/ next line will compile recently changed .c files
